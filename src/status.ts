@@ -1,6 +1,6 @@
 import { GTREND_GEOS, KEEP_DAYS, SOURCES } from './config';
 import { fmt } from './notify';
-import { appShell, esc, safeUrl } from './ui';
+import { appShell, esc } from './ui';
 
 type Row = Record<string, string | number | null>;
 
@@ -26,6 +26,10 @@ function sourceLabel(source: string): string {
   return label;
 }
 
+function detailUrl(source: string, itemId: string): string {
+  return `/item?source=${encodeURIComponent(source)}&id=${encodeURIComponent(itemId)}`;
+}
+
 function timeCell(ts: number): string {
   return `<td class="nowrap"><time data-ts="${ts}">${esc(new Date(ts).toISOString())}</time></td>`;
 }
@@ -35,7 +39,9 @@ function alertRow(a: Row): string {
   const kind = String(a.kind);
   const ratio = Number(a.ratio) || 0;
   const title = a.title ?? a.item_id ?? '(未知条目)';
-  const url = safeUrl(a.url);
+  const source = String(a.source ?? '');
+  const itemId = String(a.item_id ?? '');
+  const detail = source && itemId ? detailUrl(source, itemId) : '';
   const kindBadge = kind === 'new-entry'
     ? '<span class="badge info">🆕 新上榜</span>'
     : '<span class="badge hot">🔥 提速</span>';
@@ -43,8 +49,8 @@ function alertRow(a: Row): string {
   return `<tr>
 ${timeCell(ts)}
 <td>${kindBadge}</td>
-<td class="nowrap">${esc(sourceLabel(String(a.source)))}</td>
-<td class="title-cell">${url ? `<a class="link" href="${esc(url)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title)}</td>
+<td class="nowrap">${esc(sourceLabel(source))}</td>
+<td class="title-cell">${detail ? `<a class="link" href="${esc(detail)}">${esc(title)}</a>` : esc(title)}<div style="font-size:11px;color:var(--muted);margin-top:2px">站内查看走势</div></td>
 <td class="num strong">${esc(fmt(Number(a.score) || 0))}</td>
 <td class="num">${esc(ratioText)}</td>
 </tr>`;
@@ -108,7 +114,7 @@ export function renderStatusPage(data: StatusData): string {
 </div>`;
 
   const alertsPanel = `<section class="panel">
-<div class="panel-head"><div class="panel-title">🔥 最近异动 <span class="hint muted">只展示真正值得关注的变化</span></div><a class="btn small" href="/sources">看完整榜单</a></div>
+<div class="panel-head"><div class="panel-title">🔥 最近异动 <span class="hint muted">点击条目先看站内走势</span></div><a class="btn small" href="/sources">看完整榜单</a></div>
 ${alerts.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>时间</th><th>类型</th><th>来源</th><th>条目</th><th class="num">热度</th><th class="num">倍数</th></tr></thead><tbody>${alerts.slice(0, 16).map(alertRow).join('')}</tbody></table></div>` : `<div class="empty"><div class="empty-icon">🌱</div><strong>还没有异动告警</strong><div>冷启动期间会先积累历史快照；你仍然可以先查看所有数据源的当前榜单。</div><a class="btn primary" href="/sources">查看当前榜单</a></div>`}
 </section>`;
 
