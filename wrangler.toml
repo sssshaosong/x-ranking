@@ -1,16 +1,12 @@
 name = "x-ranking"
 main = "src/index.ts"
 compatibility_date = "2026-01-01"
-
-# Dashboard is the source of truth for runtime settings.
-# keep_vars preserves variables configured manually in Cloudflare Dashboard.
 keep_vars = true
 
-# D1 is intentionally NOT declared here.
-# In Cloudflare Workers Builds, scripts/prepare-cloudflare-config.mjs resolves
-# the already-existing D1 database and injects its UUID into this file only
-# inside the ephemeral CI workspace before `wrangler deploy` runs.
-# This prevents Wrangler automatic resource provisioning from creating a DB.
+# Dashboard remains the source of truth for secrets and the existing D1 database.
+# During Cloudflare Workers Builds, scripts/prepare-cloudflare-config.mjs resolves
+# that existing D1 and generates the ephemeral deploy config.
 #
-# Cron is also intentionally omitted. When triggers/crons are undefined,
-# Wrangler leaves the currently deployed Cron Triggers in place.
+# The deploy config installs one base Cron Trigger: every minute. The Worker does
+# not collect every minute; src/settings.ts uses D1 settings from /admin to decide
+# whether the configured interval is due. This makes scheduling editable in-app.

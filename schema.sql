@@ -1,5 +1,3 @@
--- 建表：wrangler d1 execute trend-radar-db --remote --file=./schema.sql
-
 CREATE TABLE IF NOT EXISTS items (
   source     TEXT NOT NULL,
   item_id    TEXT NOT NULL,
@@ -10,7 +8,6 @@ CREATE TABLE IF NOT EXISTS items (
   PRIMARY KEY (source, item_id)
 );
 
--- 时间序列：判定异动的唯一依据，定期清理旧数据
 CREATE TABLE IF NOT EXISTS snapshots (
   source  TEXT NOT NULL,
   item_id TEXT NOT NULL,
@@ -33,7 +30,6 @@ CREATE TABLE IF NOT EXISTS alerts (
 
 CREATE INDEX IF NOT EXISTS idx_alerts_recent ON alerts (source, item_id, ts);
 
--- 跑批日志，状态页用
 CREATE TABLE IF NOT EXISTS runs (
   ts        INTEGER PRIMARY KEY,
   polled    INTEGER DEFAULT 0,
@@ -42,3 +38,13 @@ CREATE TABLE IF NOT EXISTS runs (
   notified  INTEGER DEFAULT 0,
   errors    TEXT
 );
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  id                INTEGER PRIMARY KEY CHECK (id = 1),
+  enabled           INTEGER NOT NULL DEFAULT 1,
+  interval_minutes  INTEGER NOT NULL DEFAULT 20,
+  last_scheduled_at INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT OR IGNORE INTO app_settings (id, enabled, interval_minutes, last_scheduled_at)
+VALUES (1, 1, 20, 0);
