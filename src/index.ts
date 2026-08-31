@@ -129,18 +129,17 @@ async function statusPage(env: Env): Promise<Response> {
     store.recentAlerts(env, 30),
     getScheduleSettings(env),
   ]);
-  let html = renderStatusPage({
+  const html = renderStatusPage({
     runs,
     alerts,
     tgConfigured: !!(env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID),
     now: Date.now(),
+    schedule: {
+      enabled: schedule.enabled,
+      intervalMinutes: schedule.intervalMinutes,
+      nextRunAt: schedule.nextRunAt,
+    },
   });
-  const scheduleText = schedule.enabled ? `每 ${schedule.intervalMinutes} 分钟` : '定时已暂停';
-  html = html.replaceAll('每 20 分钟', scheduleText);
-  html = html.replace(
-    '</body>',
-    '<div style="position:fixed;right:18px;bottom:18px;display:flex;gap:8px;z-index:10"><a href="/sources" style="background:#fff;color:#111827;border:1px solid #d1d5db;padding:10px 14px;border-radius:999px;text-decoration:none;box-shadow:0 3px 14px #0002">📊 当前榜单</a><a href="/admin" style="background:#111827;color:#fff;padding:10px 14px;border-radius:999px;text-decoration:none;box-shadow:0 3px 14px #0003">⚙ 控制台</a></div></body>'
-  );
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 }
 
@@ -175,7 +174,6 @@ export default {
     const url = new URL(req.url);
 
     if (url.pathname === '/sources') return sourcesPage(env);
-
     if (url.pathname === '/admin') {
       return new Response(renderAdminPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
@@ -184,10 +182,7 @@ export default {
       try {
         const body = (await req.json()) as { token?: string };
         if (!env.RUN_TOKEN || body.token !== env.RUN_TOKEN) return unauthorized();
-        return Response.json(
-          { ok: true },
-          { headers: { 'Set-Cookie': await createSessionCookie(env) } }
-        );
+        return Response.json({ ok: true }, { headers: { 'Set-Cookie': await createSessionCookie(env) } });
       } catch (e) {
         return errorJson(e);
       }
@@ -214,7 +209,7 @@ export default {
       }
     }
 
-    // Legacy endpoints remain available for scripts/bookmarks. The admin page does not expose tokens in URLs.
+    // Legacy endpoints are kept for scripts/bookmarks, but the UI never requires typing them.
     if (url.pathname === '/run') {
       if (!(await isAuthorized(req, env))) return new Response('forbidden', { status: 403 });
       try { return Response.json(await run(env)); } catch (e) { return errorJson(e); }
