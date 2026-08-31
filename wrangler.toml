@@ -2,12 +2,15 @@ name = "x-ranking"
 main = "src/index.ts"
 compatibility_date = "2026-01-01"
 
-# 每 20 分钟执行一次。
-[triggers]
-crons = ["*/20 * * * *"]
+# Dashboard is the source of truth for runtime settings.
+# keep_vars preserves variables configured manually in Cloudflare Dashboard.
+keep_vars = true
 
-# D1 使用 Wrangler 4 的自动 provisioning。
-# 只声明 binding，不把账号相关 UUID 写进仓库。
-# 首次部署会自动创建/关联 D1，之后保持同一绑定。
-[[d1_databases]]
-binding = "DB"
+# D1 is intentionally NOT declared here.
+# In Cloudflare Workers Builds, scripts/prepare-cloudflare-config.mjs resolves
+# the already-existing D1 database and injects its UUID into this file only
+# inside the ephemeral CI workspace before `wrangler deploy` runs.
+# This prevents Wrangler automatic resource provisioning from creating a DB.
+#
+# Cron is also intentionally omitted. When triggers/crons are undefined,
+# Wrangler leaves the currently deployed Cron Triggers in place.
