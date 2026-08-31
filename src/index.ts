@@ -4,6 +4,7 @@ import { SOURCES, cfg } from './config';
 import { dedupe, detect } from './detect';
 import { sendTelegram, sendTest } from './notify';
 import { claimScheduledRun, getScheduleSettings, updateScheduleSettings } from './settings';
+import { loadSourceRows, renderSourcesPage } from './sourcepage';
 import { renderStatusPage } from './status';
 import * as store from './store';
 import { fetchBaidu } from './sources/baidu';
@@ -138,9 +139,16 @@ async function statusPage(env: Env): Promise<Response> {
   html = html.replaceAll('每 20 分钟', scheduleText);
   html = html.replace(
     '</body>',
-    '<a href="/admin" style="position:fixed;right:18px;bottom:18px;background:#111827;color:#fff;padding:10px 14px;border-radius:999px;text-decoration:none;box-shadow:0 3px 14px #0003">⚙ 控制台</a></body>'
+    '<div style="position:fixed;right:18px;bottom:18px;display:flex;gap:8px;z-index:10"><a href="/sources" style="background:#fff;color:#111827;border:1px solid #d1d5db;padding:10px 14px;border-radius:999px;text-decoration:none;box-shadow:0 3px 14px #0002">📊 当前榜单</a><a href="/admin" style="background:#111827;color:#fff;padding:10px 14px;border-radius:999px;text-decoration:none;box-shadow:0 3px 14px #0003">⚙ 控制台</a></div></body>'
   );
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+}
+
+async function sourcesPage(env: Env): Promise<Response> {
+  const rows = await loadSourceRows(env);
+  return new Response(renderSourcesPage(rows, Date.now()), {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
 }
 
 function errorJson(e: unknown) {
@@ -165,6 +173,8 @@ export default {
 
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
+
+    if (url.pathname === '/sources') return sourcesPage(env);
 
     if (url.pathname === '/admin') {
       return new Response(renderAdminPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
