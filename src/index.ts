@@ -2,6 +2,7 @@ import { renderAdminPage } from './admin';
 import { clearSessionCookie, createSessionCookie, isAuthorized } from './auth';
 import { SOURCES, cfg } from './config';
 import { dedupe, detect } from './detect';
+import { loadItemDetail, renderItemDetail, renderItemNotFound } from './itempage';
 import { sendTelegram, sendTest } from './notify';
 import { claimScheduledRun, getScheduleSettings, updateScheduleSettings } from './settings';
 import { loadSourceRows, renderSourcesPage } from './sourcepage';
@@ -150,6 +151,22 @@ async function sourcesPage(env: Env): Promise<Response> {
   });
 }
 
+async function itemPage(env: Env, url: URL): Promise<Response> {
+  const source = url.searchParams.get('source') ?? '';
+  const itemId = url.searchParams.get('id') ?? '';
+  if (!source || !itemId) {
+    return new Response(renderItemNotFound(), {
+      status: 404,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  }
+  const detail = await loadItemDetail(env, source, itemId);
+  return new Response(detail ? renderItemDetail(detail) : renderItemNotFound(), {
+    status: detail ? 200 : 404,
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
+}
+
 function errorJson(e: unknown) {
   const message = String(e instanceof Error ? e.message : e).slice(0, 500);
   console.error(message);
@@ -173,6 +190,7 @@ export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
 
+    if (url.pathname === '/item') return itemPage(env, url);
     if (url.pathname === '/sources') return sourcesPage(env);
     if (url.pathname === '/admin') {
       return new Response(renderAdminPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
