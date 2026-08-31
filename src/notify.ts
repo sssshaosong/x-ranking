@@ -32,7 +32,6 @@ export function renderMessage(d: Detection): string {
       ? `🆕 <b>新上榜</b> · ${esc(label)}`
       : `🔥 <b>提速 ${d.ratio.toFixed(1)}x</b> · ${esc(label)}`;
 
-  // Telegram 非等宽字体，全角空格对齐是假象，速度信息压成一行更紧凑
   const detail =
     d.kind === 'new-entry'
       ? `首次上榜即第 <b>${d.item.rank}</b> 位`
@@ -53,7 +52,7 @@ export function renderMessage(d: Detection): string {
     `当前热度　${fmt(d.item.score)}`,
     extras ? `<i>${extras}</i>` : '',
     '',
-    `<a href="${esc(d.item.url)}">打开原文 →</a>`,
+    `<a href="${esc(d.item.url)}">查看详情 →</a>`,
   ]
     .filter((line) => line !== '')
     .join('\n');
@@ -79,7 +78,6 @@ export async function sendTelegram(env: Env, d: Detection): Promise<boolean> {
     chat_id: env.TELEGRAM_CHAT_ID,
     text: renderMessage(d),
     parse_mode: 'HTML',
-    // 关掉通知音，异动多的时候不至于吵
     disable_notification: true,
   });
   return true;
