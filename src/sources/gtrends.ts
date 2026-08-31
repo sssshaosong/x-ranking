@@ -10,6 +10,15 @@ function decodeEntities(s: string): string {
     .replace(/&amp;/g, '&');
 }
 
+/** RSS 只用于后端采集；用户点击时进入可读的 Google Trends Explore 页面。 */
+function readableTrendUrl(geo: string, keyword: string): string {
+  const url = new URL('https://trends.google.com/explore');
+  url.searchParams.set('date', 'now 1-d');
+  url.searchParams.set('geo', geo);
+  url.searchParams.set('q', keyword);
+  return url.toString();
+}
+
 async function fetchGeo(geo: string, label: string): Promise<SourceResult> {
   const xml = await fetchText(`https://trends.google.com/trending/rss?geo=${geo}`);
   const items: RawItem[] = [];
@@ -19,16 +28,19 @@ async function fetchGeo(geo: string, label: string): Promise<SourceResult> {
     const body = end > 0 ? block.slice(0, end) : block;
     const title = body.match(/<title>([\s\S]*?)<\/title>/);
     const traffic = body.match(/<ht:approx_traffic>([\s\S]*?)<\/ht:approx_traffic>/);
-    const link = body.match(/<link>([\s\S]*?)<\/link>/);
     if (!title) continue;
 
+    const keyword = decodeEntities(title[1].trim());
     items.push({
-      id: decodeEntities(title[1].trim()),
-      title: `[${label}] ${decodeEntities(title[1].trim())}`,
-      url: link ? decodeEntities(link[1].trim()) : `https://trends.google.com/trending?geo=${geo}`,
+      id: keyword,
+      title: keyword,
+      url: readableTrendUrl(geo, keyword),
       score: traffic ? parseCount(traffic[1]) : 0,
       rank: items.length + 1,
-      extra: { geo, traffic: traffic ? traffic[1].trim() : '—' },
+      extra: {
+        region: label,
+        traffic: traffic ? decodeEntities(traffic[1].trim()) : '—',
+      },
     });
     if (items.length >= 10) break;
   }
@@ -38,7 +50,7 @@ async function fetchGeo(geo: string, label: string): Promise<SourceResult> {
 
 /** 逐地区拉取。单个地区失败不影响其它地区。 */
 export async function fetchGTrends(): Promise<SourceResult[]> {
-  const out = await Promise.all(
+  return Promise.all(
     GTREND_GEOS.map(async (g) => {
       try {
         return await fetchGeo(g.geo, g.label);
@@ -51,5 +63,4 @@ export async function fetchGTrends(): Promise<SourceResult[]> {
       }
     })
   );
-  return out;
 }
