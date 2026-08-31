@@ -1,7 +1,7 @@
 import { GTREND_GEOS, SOURCES } from './config';
 import { fmt } from './notify';
 import type { Env } from './types';
-import { appShell, esc, safeUrl } from './ui';
+import { appShell, esc } from './ui';
 
 export interface SourceRow {
   source: string;
@@ -50,6 +50,10 @@ function sourceHome(source: string): string {
   return '';
 }
 
+function detailUrl(source: string, itemId: string): string {
+  return `/item?source=${encodeURIComponent(source)}&id=${encodeURIComponent(itemId)}`;
+}
+
 function sourceIcon(source: string): string {
   const base = source.split(':')[0];
   if (base === 'hn') return 'Y';
@@ -90,13 +94,13 @@ export function renderSourcesPage(rows: SourceRow[], now = Date.now()): string {
         const official = sourceHome(source);
         const latest = list[0]?.ts ?? 0;
         const rowsHtml = list.map((row) => {
-          const url = safeUrl(row.url);
+          const detail = detailUrl(row.source, row.item_id);
           const title = row.title || row.item_id;
           return `<tr>
 <td class="rank">#${esc(row.rank)}</td>
-<td class="title-cell">${url ? `<a class="link" href="${esc(url)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title)}</td>
+<td class="title-cell"><a class="link" href="${esc(detail)}">${esc(title)}</a><div class="row-hint">在站内查看历史走势与异动</div></td>
 <td class="num score">${esc(fmt(Number(row.score) || 0))}</td>
-<td class="num">${url ? `<a class="btn small" href="${esc(url)}" target="_blank" rel="noopener">查看详情 ↗</a>` : '—'}</td>
+<td class="num"><a class="btn small" href="${esc(detail)}">查看走势 →</a></td>
 </tr>`;
         }).join('');
 
@@ -110,8 +114,9 @@ export function renderSourcesPage(rows: SourceRow[], now = Date.now()): string {
       }).join('')
     : `<section class="panel"><div class="empty"><div class="empty-icon">📭</div><strong>还没有榜单快照</strong><div>先在控制台点一次「立即采集」，这里就会自动出现每个数据源的最新榜单。</div><a class="btn primary" href="/admin#actions">去控制台采集</a></div></section>`;
 
-  const body = `<section class="hero">
-<div class="hero-copy"><div class="eyebrow">Live Sources</div><h1>当前最热，按数据源清楚分组。</h1><p>这里是给人看的实时快照。RSS、XML、API 只在后台使用；点击任何条目都会进入正常网页或可读详情。</p></div>
+  const body = `<style>.row-hint{font-size:11px;color:var(--muted);margin-top:2px}</style>
+<section class="hero">
+<div class="hero-copy"><div class="eyebrow">Live Sources</div><h1>当前最热，先在站内看清走势。</h1><p>点击标题不会再突然跳到 Google Trends 或其他外站。先看自己的历史曲线、排名和异动，需要时再从详情页打开官方页面。</p></div>
 <div class="hero-actions"><a class="btn primary" href="/admin#actions">▶ 立即刷新数据</a><a class="btn" href="/">返回总览</a></div>
 </section>
 <div class="panel" style="margin-bottom:16px"><div class="panel-body"><div class="form-row" style="justify-content:space-between"><div><div class="strong">筛选数据源</div><div class="muted" style="font-size:12px;margin-top:3px">点击即可只看某一类，不需要滚很长的页面。</div></div>${chips}</div></div></div>
