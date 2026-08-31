@@ -1,0 +1,21 @@
+{
+  "name": "trend-radar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "多源热点异动监控，拐点检测 + Telegram 推送，跑在 Cloudflare Workers 免费额度内",
+  "scripts": {
+    "dev": "wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx test/run.ts",
+    "preview": "tsx scripts/preview.ts",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "@types/node": "^26.4.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "undici": "^8.10.0",
+    "wrangler": "^3.100.0"
+  }
+}
