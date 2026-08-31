@@ -1,17 +1,13 @@
-name = "trend-radar"
+name = "x-ranking"
 main = "src/index.ts"
 compatibility_date = "2026-01-01"
 
-# 每 20 分钟一次。更密意义不大（各源榜单本身更新没这么快），
-# 且能压住 D1 写入量：约 72 次/天 × ~260 条 ≈ 1.9 万行写/天，远低于 10 万上限。
+# 每 20 分钟执行一次。
 [triggers]
 crons = ["*/20 * * * *"]
 
+# D1 使用 Wrangler 4 的自动 provisioning。
+# 只声明 binding，不把账号相关 UUID 写进仓库。
+# 首次部署会自动创建/关联 D1，之后保持同一绑定。
 [[d1_databases]]
 binding = "DB"
-database_name = "trend-radar-db"
-database_id = "REPLACE_WITH_YOUR_D1_ID"
-
-# RUN_TOKEN、TELEGRAM_BOT_TOKEN、TELEGRAM_CHAT_ID 都用
-# `wrangler secret put` 或 Cloudflare Dashboard 的 Secret 保存，
-# 不要以明文写进这个文件。
