@@ -87,13 +87,13 @@ export async function runXCollection(env: Env, now = Date.now()): Promise<RunSum
         counts.count5m >= settings.spikeMinPosts &&
         counts.previous5m > 0 &&
         counts.ratio5m >= settings.spikeRatio &&
-        !(await recentlyAlerted(env, 'rule-spike', `rule:${rule.id}`, now))
+        !(await recentlyAlerted(env, 'rule-spike', rule.label, now))
       ) {
         const alert: AlertEvent = {
           ts: now,
           kind: 'rule-spike',
           label: rule.label,
-          subjectKey: `rule:${rule.id}`,
+          subjectKey: rule.label,
           value: counts.count5m,
           ratio: counts.ratio5m,
           detail: `最近 5 分钟 ${counts.count5m} 条，前 5 分钟 ${counts.previous5m} 条；近 1 小时 ${counts.count60m} 条`,
