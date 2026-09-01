@@ -1,43 +1,100 @@
-/** 一次采集得到的条目。score 必须是同一源内可纵向比较的数值。 */
-export interface RawItem {
-  id: string;
-  title: string;
-  url: string;
-  score: number;
-  rank: number;
-  /** 附加上下文，仅用于推送内容展示 */
-  extra?: Record<string, string | number>;
-}
-
-export interface SourceResult {
-  source: string;
-  items: RawItem[];
-  error?: string;
-}
+export type WatchRuleType = 'keyword' | 'account';
 
 export interface Env {
   DB: D1Database;
+  X_BEARER_TOKEN?: string;
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
   RUN_TOKEN?: string;
 }
 
-/** 判定告警所需的历史序列 */
-export interface SeriesPoint {
+export interface XTrend {
+  name: string;
+  tweetCount: number;
+  rank: number;
+  woeid: number;
+}
+
+export interface XTrendSnapshot extends XTrend {
   ts: number;
-  score: number;
+  previousCount?: number;
+  deltaPct?: number;
 }
 
-export interface Detection {
-  source: string;
-  item: RawItem;
-  kind: 'velocity' | 'new-entry';
-  /** 近 1 小时速度 */
-  rate: number;
-  /** 近 1 小时速度 / 24 小时基线速度 */
+export interface WatchRule {
+  id: number;
+  type: WatchRuleType;
+  label: string;
+  query: string;
+  enabled: boolean;
+  createdAt: number;
+}
+
+export interface RuleSnapshot {
+  ruleId: number;
+  ts: number;
+  count5m: number;
+  previous5m: number;
+  count15m: number;
+  count60m: number;
+  ratio5m: number;
+}
+
+export interface XPublicMetrics {
+  likeCount: number;
+  repostCount: number;
+  replyCount: number;
+  quoteCount: number;
+  bookmarkCount: number;
+  impressionCount: number;
+}
+
+export interface XPost {
+  id: string;
+  text: string;
+  createdAt: string;
+  authorId: string;
+  authorName: string;
+  username: string;
+  profileImageUrl?: string;
+  verified?: boolean;
+  metrics: XPublicMetrics;
+  engagement: number;
+  url: string;
+}
+
+export interface AlertEvent {
+  id?: number;
+  ts: number;
+  kind: 'trend-jump' | 'rule-spike';
+  label: string;
+  subjectKey: string;
+  value: number;
   ratio: number;
-  baseRate: number;
+  detail: string;
+  url?: string;
+  notified?: boolean;
 }
 
-export const HOUR = 3600_000;
-export const DAY = 24 * HOUR;
+export interface XSettings {
+  enabled: boolean;
+  intervalMinutes: number;
+  lastScheduledAt: number;
+  nextRunAt: number | null;
+  woeid: number;
+  maxTrends: number;
+  spikeRatio: number;
+  spikeMinPosts: number;
+  postsPerRule: number;
+}
+
+export interface RunSummary {
+  ok: boolean;
+  ts: number;
+  trends: number;
+  rules: number;
+  posts: number;
+  alerts: number;
+  notified: number;
+  errors: string[];
+}
