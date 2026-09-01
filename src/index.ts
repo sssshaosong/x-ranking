@@ -133,7 +133,7 @@ export default {
       if (req.method === 'GET' && url.pathname === '/admin') return html(renderAdminPage());
 
       if (url.pathname === '/api/login' && req.method === 'POST') {
-        const body = await req.json<{ token?: string }>();
+        const body = (await req.json()) as { token?: string };
         if (!env.RUN_TOKEN || body.token !== env.RUN_TOKEN) return unauthorized();
         return Response.json({ ok: true }, { headers: { 'Set-Cookie': await createSessionCookie(env) } });
       }
@@ -157,14 +157,14 @@ export default {
           return Response.json(await getSettings(env));
         }
         if (url.pathname === '/api/settings' && req.method === 'POST') {
-          const body = await req.json<Partial<XSettings>>();
+          const body = (await req.json()) as Partial<XSettings>;
           return Response.json(await updateSettings(env, body));
         }
         if (url.pathname === '/api/rules' && req.method === 'GET') {
           return Response.json({ ok: true, rules: await listRules(env) });
         }
         if (url.pathname === '/api/rules' && req.method === 'POST') {
-          const body = await req.json<{ type?: WatchRuleType; label?: string; query?: string }>();
+          const body = (await req.json()) as { type?: WatchRuleType; label?: string; query?: string };
           if (body.type !== 'keyword' && body.type !== 'account') return errorJson('type must be keyword or account', 400);
           return Response.json({ ok: true, rule: await addRule(env, body.type, body.label ?? '', body.query ?? '') });
         }
@@ -173,7 +173,7 @@ export default {
         if (match) {
           const id = Number(match[1]);
           if (req.method === 'PATCH') {
-            const body = await req.json<{ enabled?: boolean }>();
+            const body = (await req.json()) as { enabled?: boolean };
             await setRuleEnabled(env, id, body.enabled !== false);
             return Response.json({ ok: true });
           }
