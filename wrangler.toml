@@ -3,10 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2026-01-01"
 keep_vars = true
 
-# Dashboard remains the source of truth for secrets and the existing D1 database.
-# During Cloudflare Workers Builds, scripts/prepare-cloudflare-config.mjs resolves
-# that existing D1 and generates the ephemeral deploy config.
-#
-# The deploy config installs one base Cron Trigger: every minute. The Worker does
-# not collect every minute; src/settings.ts uses D1 settings from /admin to decide
-# whether the configured interval is due. This makes scheduling editable in-app.
+# Cloudflare Dashboard remains the source of truth for Secrets and the existing D1 database.
+# Workers Builds runs scripts/prepare-cloudflare-config.mjs, which resolves that existing D1
+# and writes the ephemeral deploy config with a one-minute base Cron.
+# The Worker only calls X when the app-level interval stored in D1 is due.
