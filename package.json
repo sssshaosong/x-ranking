@@ -1,22 +1,17 @@
 {
   "name": "x-ranking",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "多源热点异动监控，拐点检测 + Telegram 推送，运行在 Cloudflare Workers",
+  "description": "X-only realtime trend, keyword, account and post monitoring on Cloudflare Workers + D1",
   "scripts": {
     "postinstall": "node scripts/prepare-cloudflare-config.mjs",
     "dev": "wrangler dev",
     "typecheck": "tsc --noEmit",
-    "test": "tsx test/run.ts",
-    "preview": "tsx scripts/preview.ts",
     "deploy": "wrangler deploy --no-x-provision"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
-    "@types/node": "^26.4.0",
-    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "undici": "^8.10.0",
     "wrangler": "^4.45.0"
   }
 }
